@@ -1,0 +1,236 @@
+PIRATESNODES — NODES INFRASTRUCTURE MASTER SPECIFICATION
+
+Build a real multi-node infrastructure system for PiratesNodes.
+
+Each physical or virtual machine running the PiratesNodes Node Agent becomes a manageable hosting node.
+
+CORE NODE FEATURES
+- Add Node
+- Remove Node
+- Enable Node
+- Disable Node
+- Maintenance Mode
+- Node Health
+- Node Capacity
+- Node Resources
+- Node Servers
+- Node IP Allocations
+- Node Port Allocations
+- Node Storage
+- Node Network
+- Node Logs
+- Node Metrics
+- Node Tasks
+- Node Jobs
+- Node Agent Updates
+
+NODE INFORMATION
+Display:
+Node Name, Node ID, Region, Hostname, Public IP, Private IP where available,
+Operating System, Kernel, CPU Model, CPU Cores, CPU Threads, RAM, Disk,
+Network, Agent Version, Platform Version, Uptime, Last Heartbeat, Status.
+
+STATUS:
+ONLINE / WARNING / MAINTENANCE / OFFLINE / DISABLED
+
+REAL-TIME HEALTH
+Report CPU Usage, RAM Usage, Disk Usage, Network Usage, Load Average,
+Temperature where supported, Process Health, Agent Health, Server Count,
+Running Server Count, Stopped Server Count, Failed Server Count.
+
+HEARTBEAT
+Node Agent -> Authenticated Heartbeat -> API -> Node Status.
+Use configurable heartbeat timeout and grace periods.
+
+NODE REGISTRATION
+Owner Panel:
+NODES -> ADD NODE -> SELECT REGION -> GENERATE SHORT-LIVED REGISTRATION TOKEN
+-> COPY INSTALL COMMAND.
+
+Registration tokens must be short-lived, single-use, revocable, hashed at rest,
+and scoped to node registration. Never put permanent credentials in the installer.
+
+NODE AGENT
+The agent handles:
+Heartbeat, metrics, server lifecycle, resource allocation, file operations,
+backups, logs, console, software installation, network allocation, health checks,
+and updates.
+
+Use HTTPS/TLS, authenticated APIs, scoped credentials, request IDs and replay
+protection where appropriate.
+
+SERVER PROVISIONING
+CREATE SERVER -> RESOURCE VALIDATION -> NODE SELECTION -> IP ALLOCATION ->
+PORT ALLOCATION -> SERVER RECORD -> PROVISIONING JOB -> NODE AGENT ->
+INSTALL SOFTWARE -> WRITE CONFIGURATION -> START SERVER -> HEALTH CHECK -> READY.
+
+Never show READY before the health check succeeds.
+
+NODE SELECTION
+Consider RAM, CPU, Storage, Network, Region, Plan, Current Load, Health,
+Maintenance, and Product Requirements.
+
+Prevent over-allocation.
+
+RESOURCE RESERVATION
+AVAILABLE -> RESERVE -> PROVISION -> CONFIRM.
+If provisioning fails, release reservation, rollback and mark job failed.
+Prevent race conditions during concurrent provisioning.
+
+SERVER SPLITTER
+Allow authorized users to divide purchased resource pools into independent servers.
+Validate RAM, CPU, storage, ports, IP allocations, plan limits and permissions.
+Never allow unavailable resources.
+
+NODE IP MANAGEMENT
+Support real IPv4/IPv6 allocations. Each allocation includes IP, version, node,
+status, server, port range, reverse DNS and notes.
+States: AVAILABLE / ASSIGNED / RESERVED / MAINTENANCE.
+Never claim arbitrary public IP addresses can be generated; IPs come from real
+infrastructure or configured providers.
+
+PORT MANAGEMENT
+Support port ranges and individual ports. Prevent duplicate allocation,
+unauthorized allocation and conflicts.
+
+CUSTOM HOSTNAME
+Generate collision-safe hostnames such as:
+mc-a82f.piratesnodes.example
+survival-42.piratesnodes.example
+server-a91x.piratesnodes.example
+
+SERVER SOFTWARE
+Support configurable installers for Vanilla, Paper, Purpur, Spigot, Fabric,
+Forge, NeoForge, Velocity and BungeeCord.
+Workflow:
+SELECT SOFTWARE -> SELECT VERSION -> COMPATIBILITY CHECK -> DOWNLOAD VERIFIED
+SOURCE -> INSTALL -> CONFIGURE -> START -> HEALTH CHECK.
+Do not silently execute arbitrary downloaded code.
+
+SERVER LIFECYCLE
+START / STOP / RESTART / KILL / SUSPEND / UNSUSPEND / REINSTALL / DELETE.
+Validate permission and state, create a job, execute through the agent, record result,
+and write an audit log.
+
+JOB SYSTEM
+Use an asynchronous queue.
+Jobs: PROVISION, START, STOP, RESTART, REINSTALL, BACKUP, RESTORE, DELETE,
+MOVE, CLONE, UPDATE, FILE_OPERATION.
+States: QUEUED / RUNNING / RETRYING / SUCCESS / FAILED / CANCELLED.
+Each job has Job ID, Request ID, Actor, Server ID, Node ID, timestamps and errors.
+
+RETRY
+Retry only recoverable failures. Use maximum retries, exponential backoff and
+idempotency keys. Never duplicate server creation because of a retry.
+
+NODE MAINTENANCE
+Maintenance blocks new provisioning while allowing existing servers to continue
+unless explicitly stopped. Support migration:
+BACKUP -> TRANSFER -> TARGET -> VERIFY -> START -> HEALTH CHECK -> RELEASE SOURCE.
+
+NODE OVERLOAD PROTECTION
+Configurable CPU, RAM, disk and network thresholds.
+When exceeded: WARNING -> STOP NEW PROVISIONING -> ALERT OWNER -> MONITOR.
+Resume when capacity returns. Never automatically kill customer servers unless
+an explicit owner policy exists.
+
+NODE AUTO-UPDATES
+Support version check, verified download, graceful restart, health check and
+rollback where possible. Support automatic, manual and maintenance-window updates.
+
+NODE LOGS
+Store Agent, Provisioning, Server, Job, Security and Error logs with timestamp,
+level, node, server, job ID and request ID.
+
+NODE SECURITY
+Use least privilege where practical, authenticated control-plane communication,
+request validation, rejection of unauthorized commands, protected configuration,
+credential protection, rate limiting and audit logs.
+
+CONSOLE
+Authorize customer -> permission check -> temporary console session -> node agent
+-> server process. Sessions expire and are auditable.
+
+FILE MANAGER
+Upload, download, create, delete, rename, move, copy, extract, compress and edit.
+Protect against path traversal, unauthorized access, oversized uploads and unsafe
+archive extraction.
+
+BACKUPS
+Support manual, scheduled, incremental where supported, restore and verification.
+Do not display successful status until verification succeeds.
+
+NODE MONITORING
+Monitor CPU, RAM, disk, network, load, uptime, server count and player count where
+available. Provide 1H, 6H, 24H, 7D, 30D and custom ranges.
+
+MULTI-REGION
+Example:
+India -> Node 1, Node 2, Node 3
+Singapore -> Node 4, Node 5
+Germany -> Node 6, Node 7
+Each node belongs to a configured region.
+
+NODE CAPACITY
+Owner defines maximum RAM, CPU, storage, server count, network, reserved resources
+and provisioning threshold. Compare configuration with actual detected resources.
+Never promise infinite physical RAM.
+
+OWNER NODE PANEL
+Sections:
+NODES, REGIONS, IP ALLOCATIONS, PORT ALLOCATIONS, NODE JOBS, NODE LOGS,
+NODE HEALTH, NODE SETTINGS, MAINTENANCE, AGENT VERSIONS.
+
+Actions:
+ADD NODE, EDIT NODE, DISABLE NODE, ENABLE NODE, MAINTENANCE,
+RESTART AGENT, UPDATE AGENT, VIEW SERVERS, VIEW LOGS, VIEW METRICS, REMOVE NODE.
+
+NODE REMOVAL SAFETY
+Do not remove a node containing active servers without confirmation. Require
+server count check, backup status, migration option and typed confirmation.
+
+API
+GET /api/nodes
+POST /api/nodes
+GET /api/nodes/:id
+PATCH /api/nodes/:id
+DELETE /api/nodes/:id
+POST /api/nodes/:id/maintenance
+POST /api/nodes/:id/enable
+POST /api/nodes/:id/disable
+POST /api/nodes/:id/update
+GET /api/nodes/:id/metrics
+GET /api/nodes/:id/jobs
+
+AGENT API
+/api/v1/agent/heartbeat
+/api/v1/agent/metrics
+/api/v1/agent/jobs
+/api/v1/agent/jobs/:id/result
+
+DATABASE
+Include:
+nodes, regions, node_credentials, node_metrics, node_jobs, node_servers,
+ip_allocations, port_allocations, server_resources, agent_versions,
+maintenance_windows, node_events, audit_logs.
+
+Use foreign keys, indexes, transactions and unique constraints.
+
+GITHUB
+Repository must include appropriate build files, README, .gitignore, .env.example,
+Dockerfile where useful, and .github/workflows/build.yml.
+If a component does not use Gradle, do not force Gradle onto it; use its correct
+native build system while providing Gradle only for components that actually use it.
+GitHub Actions must checkout, install dependencies, test, build, run static checks
+where configured, and upload artifacts.
+
+FINAL RULE
+Do not create fake node status, CPU/RAM/disk usage, IP allocations, provisioning,
+server creation, health status, backups or jobs.
+
+Every state must come from:
+REAL DATABASE STATE + REAL NODE AGENT STATE + REAL RESOURCE VALIDATION +
+REAL AUTHORIZATION + REAL LOGGING.
+
+The node system must scale from one node to a large multi-region PiratesNodes
+infrastructure without requiring a complete platform rewrite.
